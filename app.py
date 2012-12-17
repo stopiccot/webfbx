@@ -4,10 +4,10 @@ app = flask.Flask(__name__)
 
 @app.route("/")
 def hello():
-    return flask.render_template('index.html')
+    return flask.render_template('index.html', fbx_json = fbx_test())
 
-@app.route("/fbx")
-def fbx():
+@app.route("/<file>.fbx")
+def fbx(file):
     return fbx_test()
 
 @app.route('/js/<file>')

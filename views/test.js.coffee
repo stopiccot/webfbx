@@ -113,6 +113,8 @@ webGLStart = ->
     canvas = $("#webgl-canvas")[0]
 
     # alert navigator.userAgent
+    #o = JSON.parse($("#fbx").html())
+    #alert o
 
     initGL(canvas)
 
@@ -155,7 +157,8 @@ webGLStart = ->
     mvMatrix = mat4.create();
     pMatrix = mat4.create();
 
-    cube = createCube()
+    #cube = createCube()
+    cube = createMeshFromVertices(JSON.parse($("#fbx").html())["vertices"])
 
     angle = 0.0
 
@@ -175,7 +178,7 @@ webGLStart = ->
         mat4.perspective(45, 1, 0.1, 100.0, pMatrix)
 
         mat4.identity(mvMatrix)   
-        mat4.translate(mvMatrix, [0.0, 0.0, -5.0])
+        mat4.translate(mvMatrix, [0.0, 0.0, -20.0])
         rotate(angle)
 
         # n = 40
