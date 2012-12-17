@@ -7,12 +7,12 @@ app.config['UPLOAD_FOLDER'] = 'fbx'
 # Index page
 @app.route("/")
 def index():
-    return flask.render_template('index.html', fbx_json = fbx_test())
+    return flask.render_template('index.html', fbx_json = fbx_test('./test.fbx'))
 
 # Compile FBX to JSON
 @app.route("/fbx/<file>")
 def fbx(file):
-    return fbx_test()
+    return fbx_test('fbx/' + file)
 
 # Compile coffeescript to javascript
 @app.route('/coffee/<file>')
@@ -28,9 +28,9 @@ def upload_file():
             filename = werkzeug.secure_filename(file.filename)
             try:
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            except:
-                return 'Fail in file.save()'
-                
+            except Exception as e:
+                return 'Fail in file.save() - \"%s\" - \"%s\"' % (e.__class__.__name__, e)
+
             return 'Fbx was uploaded'
     return '''
     <!doctype html>
