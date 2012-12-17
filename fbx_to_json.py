@@ -89,7 +89,7 @@ def print_mesh(node):
     result2["vertices"] = result["vertices"]
     return result2
 
-def fbx_test(file):
+def fbx_to_json(file):
     lSdkManager, lScene = FbxCommon.InitializeSdkObjects()
     lResult = FbxCommon.LoadScene(lSdkManager, lScene, file)
     if not lResult:

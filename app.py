@@ -1,18 +1,17 @@
 import coffeescript, flask, werkzeug, os, json
-from fbx_test import fbx_test
+from fbx_to_json import fbx_to_json
 
 app = flask.Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'fbx'
 
 # Index page
 @app.route("/")
 def index():
-    return flask.render_template('index.html', fbx_json = fbx_test('fbx/test.fbx'))
+    return flask.render_template('index.html')
 
 # Compile FBX to JSON
 @app.route("/fbx/<file>")
 def fbx(file):
-    return fbx_test('fbx/' + file)
+    return fbx_to_json('fbx/' + file)
 
 # Compile coffeescript to javascript
 @app.route('/coffee/<file>')
@@ -21,7 +20,7 @@ def coffee(file):
 
 # Upload hander
 @app.route('/upload_fbx', methods = ['GET', 'POST'])
-def upload_fbx_hanlder():
+def upload_fbx():
     if flask.request.method == 'POST':
         print(flask.request.files)
         file = flask.request.files.get('files[]')
