@@ -1,6 +1,5 @@
-import fbx
+from fbx import *
 import FbxCommon
-#from fbx import *
 
 def DisplayHierarchy(pScene):
     lRootNode = pScene.GetRootNode()
@@ -16,7 +15,22 @@ def DisplayNodeHierarchy(pNode, pDepth):
     for i in range(pDepth):
         result += "     "
 
-    result += pNode.GetName()
+    result += pNode.GetName() + " - "
+    nodeAttributeType = pNode.GetNodeAttribute().GetAttributeType()
+    if nodeAttributeType == FbxNodeAttribute.eMarker:
+        result += "eMarker"
+    elif nodeAttributeType == FbxNodeAttribute.eSkeleton:
+        result += "eSkeleton"
+    elif nodeAttributeType == FbxNodeAttribute.eMesh:
+        result += "eMesh"
+    elif nodeAttributeType == FbxNodeAttribute.eNurbs:
+        result += "eNurbs"
+    elif nodeAttributeType == FbxNodeAttribute.ePatch:
+        result += "ePatch"
+    elif nodeAttributeType == FbxNodeAttribute.eCamera:
+        result += "eCamera"
+    elif nodeAttributeType == FbxNodeAttribute.eLight:
+        result += "eLight"
     result += '<br>'
 
     for i in range(pNode.GetChildCount()):
@@ -30,9 +44,11 @@ def fbx_test():
     if not lResult:
         return 'Failed to open FBX scene'
 
-    result = 'FBX scene successfully opened<br>------------------------------------------<br>'
+    result = 'FBX scene successfully opened<br>'
+    result += '------------------------------------------<br>'
     result += DisplayHierarchy(lScene)
+    result += '------------------------------------------<br>'
 
     lSdkManager.Destroy()
-    
+
     return result

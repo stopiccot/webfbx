@@ -44,7 +44,7 @@ createCube = ->
     plane = (a, b, c, color) ->
         for i in [0..5]
             vertices.push(a[i], b[i], c[i])
-            colors = colors.concat(color)
+            #colors = colors.concat(color)
 
     planeX = (x, color) -> plane([x, x, x, x, x, x], a, b, color)
     planeY = (y, color) -> plane(a, [y, y, y, y, y, y], b, color)
@@ -56,6 +56,25 @@ createCube = ->
     planeZ(-1.0, [1.0, 1.0, 0.0, 1.0])
     planeX(-1.0, [0.0, 0.0, 1.0, 1.0])
     planeX( 1.0, [1.0, 0.0, 1.0, 1.0])
+
+    return createMeshFromVertices(vertices)
+
+createMeshFromVertices = (vertices) ->
+    colors = []
+
+    avaliable_colors = [
+        [0.0, 1.0, 0.0, 1.0],
+        [1.0, 0.5, 0.0, 1.0],
+        [1.0, 0.0, 0.0, 1.0],
+        [1.0, 1.0, 0.0, 1.0],
+        [0.0, 0.0, 1.0, 1.0],
+        [1.0, 0.0, 1.0, 1.0]        
+    ]
+
+    for i in [0..vertices.length / 3]
+        j = i#j = Math.floor(i / 3)
+        c = avaliable_colors[j % avaliable_colors.length]
+        colors = colors.concat(c)
 
     return createObject(vertices, colors)
 
@@ -92,6 +111,8 @@ map = (list, f) ->
 
 webGLStart = ->
     canvas = $("#webgl-canvas")[0]
+
+    # alert navigator.userAgent
 
     initGL(canvas)
 
