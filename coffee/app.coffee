@@ -113,13 +113,17 @@ dump_obj = (obj) =>
     (key + " -> " + obj[key] for key in obj)
 
 webGLStart = ->
+    cube = null
+
     $("#fileupload").fileupload({
         dataType: 'json',
         add: (e, data) -> 
-            alert("Starting upload: #{data.files[0].name}")
             data.submit()
         done: (e, data) ->
-            alert("Upload finished")
+            # Load parsed mesh
+            $.get(data.result.url, (data) ->
+                cube = createMeshFromVertices(JSON.parse(data)["vertices"])
+            )
     })
 
     canvas = $("#webgl-canvas")[0]
@@ -165,8 +169,10 @@ webGLStart = ->
     mvMatrix = mat4.create();
     pMatrix = mat4.create();
 
-    #cube = createCube()
-    cube = createMeshFromVertices(JSON.parse($("#fbx").html())["vertices"])
+    # Load FBX json via ajax
+    $.get('fbx/test.fbx', (data) ->
+        cube = createMeshFromVertices(JSON.parse(data)["vertices"])
+    )
 
     angle = 0.0
 
@@ -180,7 +186,7 @@ webGLStart = ->
         gl.clearDepth(1.0)
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-        angle -= 0.013
+        angle -= 0.01
 
         mat4.identity(pMatrix)   
         mat4.perspective(45, 1, 0.1, 100.0, pMatrix)
@@ -194,7 +200,8 @@ webGLStart = ->
         # k *= 0.075
 
         #for i in [1..n]
-        drawObject(cube, shader, mvMatrix, pMatrix, 1.0)# / n)
+        if cube != null
+            drawObject(cube, shader, mvMatrix, pMatrix, 1.0)# / n)
         #rotate(k / n)
 
     setInterval(render, 1000/60)
