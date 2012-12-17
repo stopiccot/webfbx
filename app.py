@@ -1,4 +1,4 @@
-import coffeescript, flask, werkzeug, os
+import coffeescript, flask, werkzeug, os, json
 from fbx_test import fbx_test
 
 app = flask.Flask(__name__)
@@ -17,7 +17,12 @@ def fbx(file):
 # Compile coffeescript to javascript
 @app.route('/coffee/<file>')
 def coffee(file):
-    return coffeescript.compile_file('coffee/' + file + '.coffee')
+    return coffeescript.compile_file('coffee/' + file)
+
+# Upload hander
+@app.route('/upload_fbx/handler.json')
+def upload_fbx_hanlder():
+    return json.dumps({'json': 'handler.json'})
 
 # Upload page
 @app.route('/upload_fbx', methods = ['GET', 'POST'])

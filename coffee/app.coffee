@@ -109,12 +109,20 @@ drawObject = (obj, shader, mvMatrix, pMatrix, alpha) ->
 map = (list, f) ->
     (f(x) for x in list)
 
-webGLStart = ->
-    canvas = $("#webgl-canvas")[0]
+dump_obj = (obj) =>
+    (key + " -> " + obj[key] for key in obj)
 
-    # alert navigator.userAgent
-    #o = JSON.parse($("#fbx").html())
-    #alert o
+webGLStart = ->
+    $("#fileupload").fileupload({
+        dataType: 'json',
+        add: (e, data) -> 
+            alert("Starting upload: #{data.files[0].name}")
+            data.submit()
+        done: (e, data) ->
+            alert("Upload finished")
+    })
+
+    canvas = $("#webgl-canvas")[0]
 
     initGL(canvas)
 
