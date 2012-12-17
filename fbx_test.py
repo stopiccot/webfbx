@@ -52,53 +52,6 @@ def find_mesh(scene, node = None):
 
     return None
 
-# def DisplayControlsPoints(pMesh):
-#     lControlPointsCount = pMesh.GetControlPointsCount()
-#     lControlPoints = pMesh.GetControlPoints()
-
-#     DisplayString("    Control Points")
-
-#     for i in range(lControlPointsCount):
-#         DisplayInt("        Control Point ", i)
-#         Display3DVector("            Coordinates: ", lControlPoints[i])
-
-#         for j in range(pMesh.GetLayerCount()):
-#             leNormals = pMesh.GetLayer(j).GetNormals()
-#             if leNormals:
-#                 if leNormals.GetMappingMode() == FbxLayerElement.eByControlPoint:
-#                     header = "            Normal Vector (on layer %d): " % j 
-#                     if leNormals.GetReferenceMode() == FbxLayerElement.eDirect:
-#                         Display3DVector(header, leNormals.GetDirectArray().GetAt(i))
-
-#     DisplayString("")
-
-# def DisplayPolygons(pMesh):
-#     lPolygonCount = pMesh.GetPolygonCount()
-#     lControlPoints = pMesh.GetControlPoints() 
-
-#     DisplayString("    Polygons")
-
-#     vertexId = 0
-#     for i in range(lPolygonCount):
-#         DisplayInt("        Polygon ", i)
-
-#         for l in range(pMesh.GetLayerCount()):
-#             lePolgrp = pMesh.GetLayer(l).GetPolygonGroups()
-#             if lePolgrp:
-#                 if lePolgrp.GetMappingMode() == FbxLayerElement.eByPolygon:
-#                     if lePolgrp.GetReferenceMode() == FbxLayerElement.eIndex:
-#                         header = "        Assigned to group (on layer %d): " % l 
-#                         polyGroupId = lePolgrp.GetIndexArray().GetAt(i)
-#                         DisplayInt(header, polyGroupId)
-#                 else:
-#                     # any other mapping modes don't make sense
-#                     DisplayString("        \"unsupported group assignment\"")
-
-#         lPolygonSize = pMesh.GetPolygonSize(i)
-
-#         for j in range(lPolygonSize):
-#             lControlPointIndex = pMesh.GetPolygonVertex(i, j)
-
 def get_vertices(mesh):
     unique_points = []
     pointsCount = mesh.GetControlPointsCount()

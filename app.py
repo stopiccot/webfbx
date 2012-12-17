@@ -1,28 +1,36 @@
 import coffeescript, flask, werkzeug, os
 from fbx_test import fbx_test
+
 app = flask.Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'fbx'
 
+# Index page
 @app.route("/")
-def hello():
+def index():
     return flask.render_template('index.html', fbx_json = fbx_test())
 
-@app.route("/<file>.fbx")
+# Compile FBX to JSON
+@app.route("/fbx/<file>")
 def fbx(file):
     return fbx_test()
 
-# For serving coffee script code
+# Compile coffeescript to javascript
 @app.route('/coffee/<file>')
-def js(file):
+def coffee(file):
     return coffeescript.compile_file('coffee/' + file + '.coffee')
 
+# Upload page
 @app.route('/upload_fbx', methods = ['GET', 'POST'])
 def upload_file():
     if flask.request.method == 'POST':
         file = flask.request.files['file']
         if file and file.filename.endswith('.fbx'):
             filename = werkzeug.secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            try:
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            except:
+                return 'Fail in file.save()'
+                
             return 'Fbx was uploaded'
     return '''
     <!doctype html>
