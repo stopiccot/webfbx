@@ -4,7 +4,7 @@ app = flask.Flask(__name__)
 
 @app.route("/")
 def hello():
-    return fbx_test()#flask.render_template('index.html')
+    return flask.render_template('index.html')
 
 @app.route("/fbx")
 def fbx():

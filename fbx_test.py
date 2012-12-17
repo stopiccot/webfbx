@@ -32,4 +32,7 @@ def fbx_test():
 
     result = 'FBX scene successfully opened<br>------------------------------------------<br>'
     result += DisplayHierarchy(lScene)
+
+    lSdkManager.Destroy()
+    
     return result

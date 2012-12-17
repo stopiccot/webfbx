@@ -111,8 +111,9 @@ webGLStart = ->
     ).resize()
 
     gl.enable(gl.BLEND)
-    #gl.enable(gl.DEPTH_TEST)
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE)
+    gl.enable(gl.DEPTH_TEST)
+    gl.depthFunc(gl.LESS);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_APLHA)
 
     shader = compileShader($("#vertex-shader").html(), $("#pixel-shader").html())
 
@@ -144,6 +145,7 @@ webGLStart = ->
 
     render = ->
         gl.clearColor(0.1, 0.1, 0.1, 1.0)
+        gl.clearDepth(1.0)
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
         angle -= 0.013
@@ -155,13 +157,13 @@ webGLStart = ->
         mat4.translate(mvMatrix, [0.0, 0.0, -5.0])
         rotate(angle)
 
-        n = 40
-        k = 15.0 + 14.0 * Math.sin(0.5 * angle)
-        k *= 0.075
+        # n = 40
+        # k = 15.0 + 14.0 * Math.sin(0.5 * angle)
+        # k *= 0.075
 
-        for i in [1..n]
-            drawObject(cube, shader, mvMatrix, pMatrix, 1.0 / n)
-            rotate(k / n)
+        #for i in [1..n]
+        drawObject(cube, shader, mvMatrix, pMatrix, 1.0)# / n)
+        #rotate(k / n)
 
     setInterval(render, 1000/60)
 
