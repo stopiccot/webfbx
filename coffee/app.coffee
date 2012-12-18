@@ -1,39 +1,3 @@
-gl = null
-
-compileShaderPart = (type, source) ->
-    shader = gl.createShader(type)
-    gl.shaderSource(shader, source)
-    gl.compileShader(shader)
-
-    if not gl.getShaderParameter(shader, gl.COMPILE_STATUS)
-        alert(gl.getShaderInfoLog(shader))
-
-    return shader
-
-compileShader = (vertex, pixel) ->
-    vertexShader = compileShaderPart(gl.VERTEX_SHADER, vertex)
-    pixelShader = compileShaderPart(gl.FRAGMENT_SHADER, pixel)
-
-    shader = gl.createProgram()
-    gl.attachShader(shader, vertexShader)
-    gl.attachShader(shader, pixelShader)
-
-    gl.linkProgram(shader)
-
-    if not gl.getProgramParameter(shader, gl.LINK_STATUS)
-        alert("Failed to compile shader")
-
-    return shader
-
-initGL = (canvas) ->
-    try
-        gl = canvas.getContext("experimental-webgl")
-        gl.viewportWidth = canvas.width
-        gl.viewportHeight = canvas.height
-    catch error
-    if gl == null
-        alert("Could not initialise WebGL, sorry :-(")
-
 createMeshFromJSON = (json) ->
     vertices = json["vertices"]
     colors = []
@@ -155,7 +119,7 @@ dump_obj = (obj) =>
 
 webGLStart = ->
     # Initialize WebGL
-    initGL($("#webgl-canvas")[0])
+    render.initGL($("#webgl-canvas")[0])
 
     # Handle window resize
     $(window).bind("resize", () -> 
@@ -193,7 +157,7 @@ webGLStart = ->
 
     # Load shader asynchronously
     $.when($.get('/static/shaders/vertexShader.vsh'), $.get('/static/shaders/pixelShader.fsh')).done((vsh, fsh) ->
-        shader = compileShader(vsh[0], fsh[0])
+        shader = render.compileShader(vsh[0], fsh[0])
         gl.useProgram(shader)
 
         # Shader attributes
@@ -217,14 +181,14 @@ webGLStart = ->
     angle = 0.0
     wireframe = false
 
-    $(document).bind('keydown', 'space', () -> wireframe = not wireframe)
+    $(document).bind('keypress', 'space', () -> wireframe = not wireframe)
 
     rotate = (angle) ->
-        mat4.rotate(mvMatrix, 5 * angle, [1, 0, 0])
-        mat4.rotate(mvMatrix, 2 * angle, [0, 1, 0])
-        mat4.rotate(mvMatrix, 1 * angle, [0, 0, 1])
+        mat4.rotate(mvMatrix, 5 * 0, [1, 0, 0])
+        mat4.rotate(mvMatrix, 2 * 0, [0, 1, 0])
+        mat4.rotate(mvMatrix, 1 * 0, [0, 0, 1])
 
-    render = ->
+    renderFrame = ->
         gl.clearColor(0.1, 0.1, 0.1, 1.0)
         gl.clearDepth(1.0)
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -243,6 +207,6 @@ webGLStart = ->
                 drawObject(mesh, shader, mvMatrix, pMatrix, 1.0)
             drawObjectIndexedWire(mesh, shader, mvMatrix, pMatrix, 1.0)
 
-    setInterval(render, 1000 / 60)
+    setInterval(renderFrame, 1000 / 60)
 
 $(webGLStart)
