@@ -88,9 +88,6 @@ def print_mesh(node):
         result["lineIndicies"] = lineIndicies
         for value in v:
             result["vertices"] += value
-    else:
-        for i in range(len(triangleIndicies)):
-            result["vertices"] += v[triangleIndicies[i]]
 
     return result
 

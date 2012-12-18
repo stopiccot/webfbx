@@ -174,6 +174,7 @@ webGLStart = ->
     ).resize()
 
     mesh = null
+    shader = null
 
     # Helper for loading uploaded FBX models
     loadFBX = (name) -> $.get(name, (data) -> mesh = createMeshFromJSON(JSON.parse(data)))
@@ -190,20 +191,21 @@ webGLStart = ->
     gl.depthFunc(gl.LESS)
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_APLHA)
 
-    shader = compileShader($("#vertex-shader").html(), $("#pixel-shader").html())
+    # Load shader asynchronously
+    $.when($.get('/static/shaders/vertexShader.vsh'), $.get('/static/shaders/pixelShader.fsh')).done((vsh, fsh) ->
+        shader = compileShader(vsh[0], fsh[0])
+        gl.useProgram(shader)
 
-    # Shader
-    gl.useProgram(shader);
-
-    # Shader attributes
-    [shader.vertexPositionAttribute, shader.vertexColorAttribute] = map ["aVertexPosition", "aVertexColor"], (x) ->
-        a = gl.getAttribLocation(shader, x)
-        gl.enableVertexAttribArray(a)
-        return a
-    
-    # Shader uniforms
-    [shader.pMatrixUniform, shader.mvMatrixUniform,  shader.alphaUniform] = map ["uPMatrix", "uMVMatrix", "uAlpha"], (x) ->
-        gl.getUniformLocation(shader, x)
+        # Shader attributes
+        [shader.vertexPositionAttribute, shader.vertexColorAttribute] = map ["aVertexPosition", "aVertexColor"], (x) ->
+            a = gl.getAttribLocation(shader, x)
+            gl.enableVertexAttribArray(a)
+            return a
+        
+        # Shader uniforms
+        [shader.pMatrixUniform, shader.mvMatrixUniform,  shader.alphaUniform] = map ["uPMatrix", "uMVMatrix", "uAlpha"], (x) ->
+            gl.getUniformLocation(shader, x)
+    )
 
     # Matrices
     mvMatrix = mat4.create();
@@ -233,7 +235,7 @@ webGLStart = ->
         mat4.translate(mvMatrix, [0.0, 0.0, -20.0])
         rotate(angle)
 
-        if mesh != null
+        if mesh != null and shader != null
             #drawObject(mesh, shader, mvMatrix, pMatrix, 1.0)
             drawObjectIndexedWire(mesh, shader, mvMatrix, pMatrix, 1.0)
 
