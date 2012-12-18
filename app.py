@@ -11,7 +11,7 @@ def index():
 # Compile FBX to JSON
 @app.route("/fbx/<file>")
 def fbx(file):
-    return fbx_to_json('fbx/' + file)
+    return json.dumps(fbx_to_json('fbx/' + file))
 
 # Compile coffeescript to javascript
 @app.route('/coffee/<file>')
