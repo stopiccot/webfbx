@@ -34,32 +34,8 @@ initGL = (canvas) ->
     if gl == null
         alert("Could not initialise WebGL, sorry :-(")
 
-createCube = ->
-    vertices = []
-    colors = []
-
-    a = [1, -1,  1,  1, -1, -1]
-    b = [1,  1, -1, -1,  1, -1]
-
-    plane = (a, b, c, color) ->
-        for i in [0..5]
-            vertices.push(a[i], b[i], c[i])
-            #colors = colors.concat(color)
-
-    planeX = (x, color) -> plane([x, x, x, x, x, x], a, b, color)
-    planeY = (y, color) -> plane(a, [y, y, y, y, y, y], b, color)
-    planeZ = (z, color) -> plane(a, b, [z, z, z, z, z, z], color)
-
-    planeY( 1.0, [0.0, 1.0, 0.0, 1.0])
-    planeY(-1.0, [1.0, 0.5, 0.0, 1.0])
-    planeZ( 1.0, [1.0, 0.0, 0.0, 1.0])
-    planeZ(-1.0, [1.0, 1.0, 0.0, 1.0])
-    planeX(-1.0, [0.0, 0.0, 1.0, 1.0])
-    planeX( 1.0, [1.0, 0.0, 1.0, 1.0])
-
-    return createMeshFromVertices(vertices)
-
-createMeshFromVertices = (vertices) ->
+createMeshFromJSON = (json) ->
+    vertices = json["vertices"]
     colors = []
 
     avaliable_colors = [
@@ -72,16 +48,28 @@ createMeshFromVertices = (vertices) ->
     ]
 
     for i in [0..vertices.length / 3]
-        j = i#j = Math.floor(i / 3)
+        j = i
         c = avaliable_colors[j % avaliable_colors.length]
         colors = colors.concat(c)
 
-    return createObject(vertices, colors)
+    if json["indexed"]
+        return createIndexedObject(vertices, colors, json["indices"])
+    else
+        return createObject(vertices, colors)
 
 createObject = (vertices, colors) ->
     obj = new Object()
+    obj.indexed = false
     obj.vertexBuffer = createBuffer(3, vertices)
     obj.colorBuffer = createBuffer(4, colors)
+    return obj
+
+createIndexedObject = (vertices, colors, indices) ->
+    obj = new Object()
+    obj.indexed = true
+    obj.vertexBuffer = createBuffer(3, vertices)
+    obj.colorBuffer = createBuffer(4, colors)
+    obj.indexBuffer = createIndexBuffer(indices)
     return obj
 
 createBuffer = (itemSize, data) ->
@@ -90,6 +78,15 @@ createBuffer = (itemSize, data) ->
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW)
     buffer.itemSize = itemSize
     buffer.numItems = data.length / itemSize
+
+    return buffer
+
+createIndexBuffer = (data) ->
+    buffer = gl.createBuffer()
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(data), gl.STATIC_DRAW)
+    buffer.itemSize = 1
+    buffer.numItems = data.length
 
     return buffer
 
@@ -104,7 +101,11 @@ drawObject = (obj, shader, mvMatrix, pMatrix, alpha) ->
     gl.uniformMatrix4fv(shader.mvMatrixUniform, false, mvMatrix)
     gl.uniform1f(shader.alphaUniform, alpha)
 
-    gl.drawArrays(gl.TRIANGLES, 0, obj.vertexBuffer.numItems)
+    if obj.indexed
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.indexBuffer)
+        gl.drawElements(gl.TRIANGLES, obj.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0)
+    else
+        gl.drawArrays(gl.TRIANGLES, 0, obj.vertexBuffer.numItems)
 
 map = (list, f) ->
     (f(x) for x in list)
@@ -113,23 +114,10 @@ dump_obj = (obj) =>
     (key + " -> " + obj[key] for key in obj)
 
 webGLStart = ->
-    cube = null
+    # Initialize WebGL
+    initGL($("#webgl-canvas")[0])
 
-    $("#fileupload").fileupload({
-        dataType: 'json',
-        add: (e, data) -> 
-            data.submit()
-        done: (e, data) ->
-            # Load parsed mesh
-            $.get(data.result.url, (data) ->
-                cube = createMeshFromVertices(JSON.parse(data)["vertices"])
-            )
-    })
-
-    canvas = $("#webgl-canvas")[0]
-
-    initGL(canvas)
-
+    # Handle window resize
     $(window).bind("resize", () -> 
         w = $(window).width()
         h = $(window).height()
@@ -141,9 +129,19 @@ webGLStart = ->
 
         gl.viewportWidth = w
         gl.viewportHeight = h
-
-        #gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight)
     ).resize()
+
+    mesh = null
+
+    # Helper for loading uploaded FBX models
+    loadFBX = (name) -> $.get(name, (data) -> mesh = createMeshFromJSON(JSON.parse(data)))
+
+    # Initialize file upload
+    $("#fileupload").fileupload({
+        dataType: 'json',
+        add:  (e, data) -> data.submit()
+        done: (e, data) -> loadFBX(data.result.url)
+    })
 
     gl.enable(gl.BLEND)
     gl.enable(gl.DEPTH_TEST)
@@ -169,10 +167,8 @@ webGLStart = ->
     mvMatrix = mat4.create();
     pMatrix = mat4.create();
 
-    # Load FBX json via ajax
-    $.get('fbx/test.fbx', (data) ->
-        cube = createMeshFromVertices(JSON.parse(data)["vertices"])
-    )
+    # Load default model
+    loadFBX('fbx/test.fbx')
 
     angle = 0.0
 
@@ -195,15 +191,9 @@ webGLStart = ->
         mat4.translate(mvMatrix, [0.0, 0.0, -20.0])
         rotate(angle)
 
-        # n = 40
-        # k = 15.0 + 14.0 * Math.sin(0.5 * angle)
-        # k *= 0.075
+        if mesh != null
+            drawObject(mesh, shader, mvMatrix, pMatrix, 1.0)
 
-        #for i in [1..n]
-        if cube != null
-            drawObject(cube, shader, mvMatrix, pMatrix, 1.0)# / n)
-        #rotate(k / n)
-
-    setInterval(render, 1000/60)
+    setInterval(render, 1000 / 60)
 
 $(webGLStart)

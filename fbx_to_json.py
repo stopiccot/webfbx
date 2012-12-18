@@ -79,13 +79,20 @@ def print_mesh(node):
             pp.append(mesh.GetPolygonVertex(i, j - 1))
             pp.append(mesh.GetPolygonVertex(i, j))
 
+    result["indexed"] = True
     result["vertices"] = []
-    for i in range(len(pp)):
-        result["vertices"] += v[pp[i]]
 
-    #result["p"] = pp
-
+    if result["indexed"]:
+        result["indices"] = pp
+        for value in v:
+            result["vertices"] += value
+    else:
+        for i in range(len(pp)):
+            result["vertices"] += v[pp[i]]
+            
     result2 = {}
+    result2["indexed"]  = result["indexed"]
+    result2["indices"]  = result["indices"]
     result2["vertices"] = result["vertices"]
     return result2
 
