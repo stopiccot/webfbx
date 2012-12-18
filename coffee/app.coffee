@@ -95,7 +95,7 @@ drawObjectIndexed = (obj, shader, mvMatrix, pMatrix, alpha) ->
         gl.drawElements(gl.TRIANGLES, obj.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0)
 
 drawObjectIndexedWire = (obj, shader, mvMatrix, pMatrix, alpha) ->
-    gl.depthFunc(gl.GL_LEQUAL)
+    gl.depthFunc(gl.LEQUAL)
 
     gl.bindBuffer(gl.ARRAY_BUFFER, obj.vertexBuffer)
     gl.vertexAttribPointer(shader.vertexPositionAttribute, obj.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0)
@@ -180,20 +180,23 @@ webGLStart = ->
 
     angle = 0.0
     wireframe = false
+    animating = false
 
-    $(document).bind('keypress', 'space', () -> wireframe = not wireframe)
+    $(document).bind('keydown', 'space', () -> wireframe = not wireframe)
+    $(document).bind('keydown', 'a', () -> animating = not animating)
 
     rotate = (angle) ->
-        mat4.rotate(mvMatrix, 5 * 0, [1, 0, 0])
-        mat4.rotate(mvMatrix, 2 * 0, [0, 1, 0])
-        mat4.rotate(mvMatrix, 1 * 0, [0, 0, 1])
+        mat4.rotate(mvMatrix, 5 * angle, [1, 0, 0])
+        mat4.rotate(mvMatrix, 2 * angle, [0, 1, 0])
+        mat4.rotate(mvMatrix, 1 * angle, [0, 0, 1])
 
     renderFrame = ->
         gl.clearColor(0.1, 0.1, 0.1, 1.0)
         gl.clearDepth(1.0)
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-        angle -= 0.0004
+        if animating
+            angle -= 0.0004
 
         mat4.identity(pMatrix)   
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix)
