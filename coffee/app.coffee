@@ -215,6 +215,9 @@ webGLStart = ->
     loadFBX('fbx/test.fbx')
 
     angle = 0.0
+    wireframe = false
+
+    $(document).bind('keydown', 'space', () -> wireframe = not wireframe)
 
     rotate = (angle) ->
         mat4.rotate(mvMatrix, 5 * angle, [1, 0, 0])
@@ -236,7 +239,8 @@ webGLStart = ->
         rotate(angle)
 
         if mesh != null and shader != null
-            #drawObject(mesh, shader, mvMatrix, pMatrix, 1.0)
+            if not wireframe
+                drawObject(mesh, shader, mvMatrix, pMatrix, 1.0)
             drawObjectIndexedWire(mesh, shader, mvMatrix, pMatrix, 1.0)
 
     setInterval(render, 1000 / 60)
