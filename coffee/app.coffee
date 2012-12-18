@@ -50,6 +50,7 @@ createMeshFromJSON = (json) ->
     for i in [0..vertices.length / 3]
         j = i
         c = avaliable_colors[j % avaliable_colors.length]
+        c = [0.8, 0.8, 0.8, 1.0]
         colors = colors.concat(c)
 
     if json["indexed"]

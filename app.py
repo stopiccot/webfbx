@@ -18,7 +18,7 @@ def fbx(file):
 def coffee(file):
     return coffeescript.compile_file('coffee/' + file)
 
-# Upload hander
+# Upload handler
 @app.route('/upload_fbx', methods = ['GET', 'POST'])
 def upload_fbx():
     if flask.request.method == 'POST':

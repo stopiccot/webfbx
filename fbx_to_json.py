@@ -52,7 +52,7 @@ def find_mesh(scene, node = None):
 
     return None
 
-def get_vertices(mesh):
+def getMeshVertices(mesh):
     unique_points = []
     pointsCount = mesh.GetControlPointsCount()
     points = mesh.GetControlPoints()
@@ -66,35 +66,33 @@ def print_mesh(node):
     mesh = node.GetNodeAttribute()
 
     result = {}
-    result["name"] = node.GetName()
-    v = get_vertices(mesh)
-    result["vertexCount"] = mesh.GetControlPointsCount()
-    result["polygonCount"] = mesh.GetPolygonCount()
-    result["p"] = []
 
-    pp = []
-    for i in range(mesh.GetPolygonCount()):
-        for j in range(2, mesh.GetPolygonSize(i)):
-            pp.append(mesh.GetPolygonVertex(i, 0))
-            pp.append(mesh.GetPolygonVertex(i, j - 1))
-            pp.append(mesh.GetPolygonVertex(i, j))
+    v = getMeshVertices(mesh)
+
+    triangleIndicies = []
+    lineIndicies = []
+    polygonCount = mesh.GetPolygonCount()
+    for i in range(polygonCount):
+        def get_vertex(k): return mesh.GetPolygonVertex(i, k)
+        polygonSize = mesh.GetPolygonSize(i)
+        lineIndicies += map(get_vertex, [polygonSize - 1, 0, 0, 1])
+        for j in range(2, polygonSize):
+            lineIndicies += map(get_vertex, [j - 1, j])
+            triangleIndicies += map(get_vertex, [0, j - 1, j])
 
     result["indexed"] = True
     result["vertices"] = []
 
     if result["indexed"]:
-        result["indices"] = pp
+        result["indices"] = triangleIndicies
+        result["lineIndicies"] = lineIndicies
         for value in v:
             result["vertices"] += value
     else:
-        for i in range(len(pp)):
-            result["vertices"] += v[pp[i]]
-            
-    result2 = {}
-    result2["indexed"]  = result["indexed"]
-    result2["indices"]  = result["indices"]
-    result2["vertices"] = result["vertices"]
-    return result2
+        for i in range(len(triangleIndicies)):
+            result["vertices"] += v[triangleIndicies[i]]
+
+    return result
 
 def fbx_to_json(file):
     lSdkManager, lScene = FbxCommon.InitializeSdkObjects()
