@@ -17,15 +17,15 @@
     <input id="fileupload" type="file" name="files[]" multiple
         data-url="/upload_fbx"
         data-sequential-uploads="true"
-        data-form-data='{"script": "true"}'>
+        data-form-data='{"script": "true"}' style="display:none;">
     <div role="main">
         <center>
-        <canvas id="webgl-canvas" width="600" height="600"></canvas>
+        <canvas id="webgl-canvas" width="1024" height="1024"></canvas>
         </center>
     </div>
     <footer>
     </footer>
-    <div id="vertex-shader" style="visibility:hidden;">
+    <div id="vertex-shader" style="display:none;">
         attribute vec3 aVertexPosition;
         attribute vec4 aVertexColor;
 
@@ -39,7 +39,7 @@
             vColor = aVertexColor;
         }
     </div>
-    <div id="pixel-shader" style="visibility:hidden;">
+    <div id="pixel-shader" style="display:none;">
         precision mediump float;
 
         varying vec4 vColor;

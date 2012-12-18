@@ -37,6 +37,7 @@ initGL = (canvas) ->
 createMeshFromJSON = (json) ->
     vertices = json["vertices"]
     colors = []
+    colors2 = []
 
     avaliable_colors = [
         [0.0, 1.0, 0.0, 1.0],
@@ -51,10 +52,12 @@ createMeshFromJSON = (json) ->
         j = i
         c = avaliable_colors[j % avaliable_colors.length]
         c = [0.8, 0.8, 0.8, 1.0]
+        c2 = [0.3, 0.3, 0.3, 1.0]
         colors = colors.concat(c)
+        colors2 = colors2.concat(c2)
 
     if json["indexed"]
-        return createIndexedObject(vertices, colors, json["indices"])
+        return createIndexedObject(vertices, colors, colors2, json["indices"], json["lineIndicies"])
     else
         return createObject(vertices, colors)
 
@@ -65,12 +68,14 @@ createObject = (vertices, colors) ->
     obj.colorBuffer = createBuffer(4, colors)
     return obj
 
-createIndexedObject = (vertices, colors, indices) ->
+createIndexedObject = (vertices, colors, colors2, indices, lineIndicies) ->
     obj = new Object()
     obj.indexed = true
     obj.vertexBuffer = createBuffer(3, vertices)
     obj.colorBuffer = createBuffer(4, colors)
+    obj.colorBuffer2 = createBuffer(4, colors2)
     obj.indexBuffer = createIndexBuffer(indices)
+    obj.lineIndexBuffer = createIndexBuffer(lineIndicies)
     return obj
 
 createBuffer = (itemSize, data) ->
@@ -108,6 +113,40 @@ drawObject = (obj, shader, mvMatrix, pMatrix, alpha) ->
     else
         gl.drawArrays(gl.TRIANGLES, 0, obj.vertexBuffer.numItems)
 
+drawObjectIndexed = (obj, shader, mvMatrix, pMatrix, alpha) ->
+    gl.depthFunc(gl.LESS)
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, obj.vertexBuffer)
+    gl.vertexAttribPointer(shader.vertexPositionAttribute, obj.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0)
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, obj.colorBuffer)
+    gl.vertexAttribPointer(shader.vertexColorAttribute, obj.colorBuffer.itemSize, gl.FLOAT, false, 0, 0)
+
+    gl.uniformMatrix4fv(shader.pMatrixUniform, false, pMatrix)
+    gl.uniformMatrix4fv(shader.mvMatrixUniform, false, mvMatrix)
+    gl.uniform1f(shader.alphaUniform, alpha)
+
+    if obj.indexed
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.indexBuffer)
+        gl.drawElements(gl.TRIANGLES, obj.indexBuffer.numItems, gl.UNSIGNED_SHORT, 0)
+
+drawObjectIndexedWire = (obj, shader, mvMatrix, pMatrix, alpha) ->
+    gl.depthFunc(gl.GL_LEQUAL)
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, obj.vertexBuffer)
+    gl.vertexAttribPointer(shader.vertexPositionAttribute, obj.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0)
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, obj.colorBuffer2)
+    gl.vertexAttribPointer(shader.vertexColorAttribute, obj.colorBuffer2.itemSize, gl.FLOAT, false, 0, 0)
+
+    gl.uniformMatrix4fv(shader.pMatrixUniform, false, pMatrix)
+    gl.uniformMatrix4fv(shader.mvMatrixUniform, false, mvMatrix)
+    gl.uniform1f(shader.alphaUniform, alpha)
+
+    if obj.indexed
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.lineIndexBuffer)
+        gl.drawElements(gl.LINES, obj.lineIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0)
+
 map = (list, f) ->
     (f(x) for x in list)
 
@@ -130,6 +169,8 @@ webGLStart = ->
 
         gl.viewportWidth = w
         gl.viewportHeight = h
+
+        #gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight)
     ).resize()
 
     mesh = null
@@ -146,7 +187,7 @@ webGLStart = ->
 
     gl.enable(gl.BLEND)
     gl.enable(gl.DEPTH_TEST)
-    gl.depthFunc(gl.LESS);
+    gl.depthFunc(gl.LESS)
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_APLHA)
 
     shader = compileShader($("#vertex-shader").html(), $("#pixel-shader").html())
@@ -183,17 +224,18 @@ webGLStart = ->
         gl.clearDepth(1.0)
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-        angle -= 0.01
+        angle -= 0.0004
 
         mat4.identity(pMatrix)   
-        mat4.perspective(45, 1, 0.1, 100.0, pMatrix)
+        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix)
 
         mat4.identity(mvMatrix)   
         mat4.translate(mvMatrix, [0.0, 0.0, -20.0])
         rotate(angle)
 
         if mesh != null
-            drawObject(mesh, shader, mvMatrix, pMatrix, 1.0)
+            #drawObject(mesh, shader, mvMatrix, pMatrix, 1.0)
+            drawObjectIndexedWire(mesh, shader, mvMatrix, pMatrix, 1.0)
 
     setInterval(render, 1000 / 60)
 

@@ -73,12 +73,12 @@ def print_mesh(node):
     lineIndicies = []
     polygonCount = mesh.GetPolygonCount()
     for i in range(polygonCount):
-        def get_vertex(k): return mesh.GetPolygonVertex(i, k)
+        def m(idx): return map(lambda x: mesh.GetPolygonVertex(i, x), idx)
         polygonSize = mesh.GetPolygonSize(i)
-        lineIndicies += map(get_vertex, [polygonSize - 1, 0, 0, 1])
+        lineIndicies += m([polygonSize - 1, 0, 0, 1])
         for j in range(2, polygonSize):
-            lineIndicies += map(get_vertex, [j - 1, j])
-            triangleIndicies += map(get_vertex, [0, j - 1, j])
+            lineIndicies += m([j - 1, j])
+            triangleIndicies += m([0, j - 1, j])
 
     result["indexed"] = True
     result["vertices"] = []
