@@ -6,7 +6,9 @@ window.render = {}
 window.render = 
     initGL: (canvas) ->
         try
-            window.gl = gl = canvas.getContext("experimental-webgl")
+            window.gl = gl = null#canvas.getContext("webgl")
+            if gl == null
+                window.gl = gl = canvas.getContext("experimental-webgl")
             gl.viewportWidth = canvas.width
             gl.viewportHeight = canvas.height
         catch error

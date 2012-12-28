@@ -1,51 +1,27 @@
 createMeshFromJSON = (json) ->
-    vertices = json["vertices"]
-    colors = []
-    colors2 = []
-
-    avaliable_colors = [
-        [0.0, 1.0, 0.0, 1.0],
-        [1.0, 0.5, 0.0, 1.0],
-        [1.0, 0.0, 0.0, 1.0],
-        [1.0, 1.0, 0.0, 1.0],
-        [0.0, 0.0, 1.0, 1.0],
-        [1.0, 0.0, 1.0, 1.0]        
-    ]
-
-    for i in [0..vertices.length / 3]
-        j = i
-        c = avaliable_colors[j % avaliable_colors.length]
-        c = [0.8, 0.8, 0.8, 1.0]
-        c2 = [0.3, 0.3, 0.3, 1.0]
-        colors = colors.concat(c)
-        colors2 = colors2.concat(c2)
-
     if json["indexed"]
-        return createIndexedObject(vertices, colors, colors2, json["indices"], json["lineIndicies"])
+        return createIndexedObject(json["vertices"], json["indices"], json["lineIndicies"])
     else
-        return createObject(vertices, colors)
+        alert("NOT INDEXED OBJECT")
 
-createObject = (vertices, colors) ->
+createObject = (vertices) ->
     obj = new Object()
     obj.indexed = false
     obj.vertexBuffer = createBuffer(3, vertices)
-    obj.colorBuffer = createBuffer(4, colors)
     return obj
 
-createIndexedObject = (vertices, colors, colors2, indices, lineIndicies) ->
+createIndexedObject = (vertices, indices, lineIndicies) ->
     obj = new Object()
     obj.indexed = true
-    obj.vertexBuffer = createBuffer(3, vertices)
-    obj.colorBuffer = createBuffer(4, colors)
-    obj.colorBuffer2 = createBuffer(4, colors2)
-    obj.indexBuffer = createIndexBuffer(indices)
-    obj.lineIndexBuffer = createIndexBuffer(lineIndicies)
+    obj.vertexBuffer = createBuffer(3, new Float32Array(vertices))
+    obj.indexBuffer = createIndexBuffer(new Uint16Array(indices))
+    obj.lineIndexBuffer = createIndexBuffer(new Uint16Array(lineIndicies))
     return obj
 
 createBuffer = (itemSize, data) ->
     buffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW)
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW)
     buffer.itemSize = itemSize
     buffer.numItems = data.length / itemSize
 
@@ -54,7 +30,7 @@ createBuffer = (itemSize, data) ->
 createIndexBuffer = (data) ->
     buffer = gl.createBuffer()
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer)
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(data), gl.STATIC_DRAW)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data, gl.STATIC_DRAW)
     buffer.itemSize = 1
     buffer.numItems = data.length
 
@@ -64,12 +40,10 @@ drawObject = (obj, shader, mvMatrix, pMatrix, alpha) ->
     gl.bindBuffer(gl.ARRAY_BUFFER, obj.vertexBuffer)
     gl.vertexAttribPointer(shader.vertexPositionAttribute, obj.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0)
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, obj.colorBuffer)
-    gl.vertexAttribPointer(shader.vertexColorAttribute, obj.colorBuffer.itemSize, gl.FLOAT, false, 0, 0)
-
     gl.uniformMatrix4fv(shader.pMatrixUniform, false, pMatrix)
     gl.uniformMatrix4fv(shader.mvMatrixUniform, false, mvMatrix)
     gl.uniform1f(shader.alphaUniform, alpha)
+    gl.uniform4f(shader.solidColor, 0.5, 0.5, 0.5, 1.0)
 
     if obj.indexed
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.indexBuffer)
@@ -83,12 +57,10 @@ drawObjectIndexed = (obj, shader, mvMatrix, pMatrix, alpha) ->
     gl.bindBuffer(gl.ARRAY_BUFFER, obj.vertexBuffer)
     gl.vertexAttribPointer(shader.vertexPositionAttribute, obj.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0)
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, obj.colorBuffer)
-    gl.vertexAttribPointer(shader.vertexColorAttribute, obj.colorBuffer.itemSize, gl.FLOAT, false, 0, 0)
-
     gl.uniformMatrix4fv(shader.pMatrixUniform, false, pMatrix)
     gl.uniformMatrix4fv(shader.mvMatrixUniform, false, mvMatrix)
     gl.uniform1f(shader.alphaUniform, alpha)
+    gl.uniform4f(shader.solidColor, 0.5, 0.5, 0.5, 1.0)
 
     if obj.indexed
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.indexBuffer)
@@ -100,12 +72,10 @@ drawObjectIndexedWire = (obj, shader, mvMatrix, pMatrix, alpha) ->
     gl.bindBuffer(gl.ARRAY_BUFFER, obj.vertexBuffer)
     gl.vertexAttribPointer(shader.vertexPositionAttribute, obj.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0)
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, obj.colorBuffer2)
-    gl.vertexAttribPointer(shader.vertexColorAttribute, obj.colorBuffer2.itemSize, gl.FLOAT, false, 0, 0)
-
     gl.uniformMatrix4fv(shader.pMatrixUniform, false, pMatrix)
     gl.uniformMatrix4fv(shader.mvMatrixUniform, false, mvMatrix)
     gl.uniform1f(shader.alphaUniform, alpha)
+    gl.uniform4f(shader.solidColor, 0.3, 0.3, 0.3, 1.0)
 
     if obj.indexed
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, obj.lineIndexBuffer)
@@ -119,23 +89,26 @@ dump_obj = (obj) =>
 
 webGLStart = ->
     # Initialize WebGL
-    render.initGL($("#webgl-canvas")[0])
+    #render.initGL($("#webgl-canvas")[0])
 
     # Handle window resize
     $(window).bind("resize", () -> 
         w = $(window).width()
         h = $(window).height()
 
-        w = h = Math.min(w, h)
+        #w = h = Math.min(w, h)
 
         $("#webgl-canvas").css("width", w + "px")
         $("#webgl-canvas").css("height", h + "px")
 
-        gl.viewportWidth = w
-        gl.viewportHeight = h
+        #gl.viewportWidth = w
+        #gl.viewportHeight = h
 
         #gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight)
     ).resize()
+
+    # Initialize WebGL
+    render.initGL($("#webgl-canvas")[0])
 
     mesh = null
     shader = null
@@ -161,13 +134,13 @@ webGLStart = ->
         gl.useProgram(shader)
 
         # Shader attributes
-        [shader.vertexPositionAttribute, shader.vertexColorAttribute] = map ["aVertexPosition", "aVertexColor"], (x) ->
+        [shader.vertexPositionAttribute, shader.vertexColorAttribute] = map ["aVertexPosition"], (x) ->
             a = gl.getAttribLocation(shader, x)
             gl.enableVertexAttribArray(a)
             return a
         
         # Shader uniforms
-        [shader.pMatrixUniform, shader.mvMatrixUniform,  shader.alphaUniform] = map ["uPMatrix", "uMVMatrix", "uAlpha"], (x) ->
+        [shader.pMatrixUniform, shader.mvMatrixUniform,  shader.alphaUniform, shader.solidColor] = map ["uPMatrix", "uMVMatrix", "uAlpha", "solidColor"], (x) ->
             gl.getUniformLocation(shader, x)
     )
 
@@ -181,9 +154,23 @@ webGLStart = ->
     angle = 0.0
     wireframe = false
     animating = false
+    camPos = {"x": 0.0, "y": 0.0, "z": -20.0}
+    w_pressed = false
+    a_pressed = false
+    s_pressed = false
+    d_pressed = false
+
 
     $(document).bind('keydown', 'space', () -> wireframe = not wireframe)
-    $(document).bind('keydown', 'a', () -> animating = not animating)
+    $(document).bind('keydown', 'q', () -> animating = not animating)
+    $(document).bind('keydown', 'w', () -> w_pressed = true)
+    $(document).bind('keyup',   'w', () -> w_pressed = false)
+    $(document).bind('keydown', 'a', () -> a_pressed = true)
+    $(document).bind('keyup',   'a', () -> a_pressed = false)
+    $(document).bind('keydown', 's', () -> s_pressed = true)
+    $(document).bind('keyup',   's', () -> s_pressed = false)
+    $(document).bind('keydown', 'd', () -> d_pressed = true)
+    $(document).bind('keyup',   'd', () -> d_pressed = false)
 
     rotate = (angle) ->
         mat4.rotate(mvMatrix, 5 * angle, [1, 0, 0])
@@ -191,6 +178,15 @@ webGLStart = ->
         mat4.rotate(mvMatrix, 1 * angle, [0, 0, 1])
 
     renderFrame = ->
+        if w_pressed
+            camPos.z += 0.05
+        if a_pressed
+            camPos.x -= 0.05
+        if s_pressed
+            camPos.z -= 0.05
+        if d_pressed
+            camPos.x += 0.05
+
         gl.clearColor(0.1, 0.1, 0.1, 1.0)
         gl.clearDepth(1.0)
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -199,10 +195,10 @@ webGLStart = ->
             angle -= 0.0004
 
         mat4.identity(pMatrix)   
-        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix)
+        mat4.perspective(90, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix)
 
         mat4.identity(mvMatrix)   
-        mat4.translate(mvMatrix, [0.0, 0.0, -20.0])
+        mat4.translate(mvMatrix, [camPos.x, camPos.y, camPos.z])
         rotate(angle)
 
         if mesh != null and shader != null
